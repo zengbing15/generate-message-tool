@@ -2,13 +2,16 @@
   "name": "generate-message-tool",
   "version": "0.1.0",
   "description": "A tool for generating message",
-  "main": "index.js",
+  "main": "bin/index.js",
+  "bin": {
+    "generate-message": "./bin/index.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/zengbing15/generate-message-tool.git"
   },
   "scripts": {
-    "start": "node index.js"
+    "start": "node bin/index.js"
   },
   "author": "ZengBing",
   "license": "MIT",
@@ -18,7 +21,7 @@
     "@ckb-lumos/helpers": "^0.16.0",
     "@ckb-lumos/indexer": "^0.16.0",
     "@ckb-lumos/rpc": "^0.16.0",
-    "ckb-js-toolkit": "^0.9.1",
+    "ckb-js-toolkit": "^0.10.2",
     "immutable": "^4.0.0-rc.12"
   }
 }
