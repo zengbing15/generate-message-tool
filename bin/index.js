@@ -33,7 +33,7 @@ let wholetx = JSON.parse(rawdata);
 /* Generate plain object of TransactionSkeleton */
 
 // Get the input cells info from the wholetx
-const INPUT_TX_HASH = "0xa3dbfc7b2089f4bd6141342e25f21b03bcdd13f2b8600384aca37625a3a8735e";
+const INPUT_TX_HASH = "0x4141ee2c7e0625a3fde320a6fb71385a1ce8c05aa5d346c2c6dd62767c0955d5";
 
 async function main() {
   const rpc = new toolkit.RPC("http://127.0.0.1:8114");
@@ -52,10 +52,10 @@ async function main() {
       "block_hash": txstatus.block_hash ,
       "block_number": blockheader.number, 
       "data": transaction.outputs_data[1]}]);
-
-  obj.outputs = List([
-    { "cell_output": wholetx.outputs[0],"data":wholetx.outputs_data[0]},
-    {"cell_output":wholetx.outputs[1],"data":wholetx.outputs_data[1]}]);
+   obj.outputs = new Array();
+   for ( var i=0; i < wholetx.outputs.length; i++){
+    obj.outputs.push({ "cell_output": wholetx.outputs[i],"data":wholetx.outputs_data[i]});
+     }
   obj.witnesses = List(["0x55000000100000005500000055000000410000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"]);
   obj.fixedEntries = [];
   obj.signingEntries = [];
