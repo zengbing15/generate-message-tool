@@ -12,13 +12,10 @@ const {
 // use `config-manager` to get node info
 const { initializeConfig, getConfig } = require("@ckb-lumos/config-manager");
 
-const {Value} = require("@ckb-lumos/base")
-
 const { List } = require("immutable");
 const fs = require('fs');
 const UnsignedTransaction = require ("../schema/UnsignedTransaction.umd.js");
-const toArrayBuffer = require('to-arraybuffer');
-const v8 = require('v8');
+const arrayBufferToHex = require('array-buffer-to-hex');
 
 //TODO：for now we directly set up as testnet, will deal with this later. 
 process.env.LUMOS_CONFIG_NAME = "AGGRON4";
@@ -45,12 +42,14 @@ let unsignedtx = rawdata.toString();
 
 const wholetx = new Object();
 const UnsignedTx = new UnsignedTransaction.UnsignedTransaction(new toolkit.Reader(unsignedtx));
-console.log(UnsignedTx);
+//console.log(UnsignedTx);
 
 const tx = UnsignedTx.getTx();
 
 
 wholetx.version = "0x"+tx.getRaw().getVersion().toBigEndianUint32().toString(16);
+console.log(tx.getRaw().getVersion().raw())
+console.log(typeof tx.getRaw().getVersion().raw())
 
 const cellDeps_arraybuffer = new Array();
 for ( var i=0; i < tx.getRaw().getCellDeps().length(); i++){
@@ -62,20 +61,20 @@ for ( var i=0; i < tx.getRaw().getCellDeps().length(); i++){
     "dep_type":tx.getRaw().getCellDeps().indexAt(i).getDepType() 
    });
   }
-console.log(cellDeps_arraybuffer);
+//console.log(cellDeps_arraybuffer);
 
 // "dep_type" = uint8(1) means that "dep_type" is "dep_group"
 wholetx.cell_deps = new Array();
 for ( var i=0; i < tx.getRaw().getCellDeps().length(); i++){
   wholetx.cell_deps.push({
     "out_point":{
-      "tx_hash":"0x"+Buffer.from(cellDeps_arraybuffer[i].out_point.tx_hash).toString('hex'),
+      "tx_hash":"0x"+ Buffer.from(cellDeps_arraybuffer[i].out_point.tx_hash).toString("hex"),
       "index":"0x"+cellDeps_arraybuffer[i].out_point.index.toBigEndianUint32().toString(16)
     },
     "dep_type":"dep_group"
    });
   }
-console.log(wholetx.cell_deps);
+//console.log(wholetx.cell_deps);
 
 
 
@@ -84,11 +83,11 @@ for ( var i=0; i < tx.getRaw().getHeaderDeps().length(); i++){
   outputsData_arraybuffer.push(tx.getRaw().getHeaderDeps().indexAt(i).raw());
    }
 // Becuase headerDeps_arraybuffer = []
-console.log(headerDeps_arraybuffer);
+//console.log(headerDeps_arraybuffer);
 wholetx.header_deps = [];
 
 
-console.log(tx.getRaw().getInputs());
+//console.log(tx.getRaw().getInputs());
 const inputs_arraybuffer = new Array();
 for ( var i=0; i < tx.getRaw().getInputs().length(); i++){
   inputs_arraybuffer.push({
@@ -99,7 +98,7 @@ for ( var i=0; i < tx.getRaw().getInputs().length(); i++){
     },  
    });
   }
-console.log(inputs_arraybuffer);
+//console.log(inputs_arraybuffer);
 wholetx.inputs = new Array();
 
 for ( var i=0; i < tx.getRaw().getInputs().length(); i++){
@@ -112,14 +111,14 @@ for ( var i=0; i < tx.getRaw().getInputs().length(); i++){
     
    });
   }
-console.log(wholetx.inputs);
+//console.log(wholetx.inputs);
 
 
-console.log(tx.getRaw().getOutputs());
+//console.log(tx.getRaw().getOutputs());
 const outputs_arraybuffer = new Array();
 for ( var i=0; i < tx.getRaw().getOutputs().length(); i++){
   outputs_arraybuffer.push({
-    "capacity":tx.getRaw().getOutputs().indexAt(i).getCapacity().raw(),
+    "capacity":tx.getRaw().getOutputs().indexAt(i).getCapacity().toLittleEndianBigUint64(),
     "lock": {
       "code_hash":tx.getRaw().getOutputs().indexAt(i).getLock().getCodeHash().raw(),
       "hash_type":tx.getRaw().getOutputs().indexAt(i).getLock().getHashType(),
@@ -133,7 +132,7 @@ console.log(outputs_arraybuffer);
 wholetx.outputs = new Array();
 for ( var i=0; i < tx.getRaw().getOutputs().length(); i++){
   wholetx.outputs.push({
-    "capacity":"0x"+Buffer.from(outputs_arraybuffer[i].capacity).toString("hex"),
+    "capacity":"0x"+ outputs_arraybuffer[i].capacity.toString(16),
     "lock": {
       "code_hash":"0x"+Buffer.from(outputs_arraybuffer[i].lock.code_hash).toString("hex"),
       "hash_type":"type",
@@ -169,7 +168,7 @@ console.log(JSON.stringify(wholetx,null,2));
 
 // Get the input cells info from the wholetx
 const INPUT_TX_HASH = wholetx.inputs[0].previous_output.tx_hash;
-console.log(INPUT_TX_HASH);
+//console.log(INPUT_TX_HASH);
 
 async function main() {
   const rpc = new toolkit.RPC("http://127.0.0.1:8114");
@@ -205,7 +204,9 @@ async function main() {
   // Use `common.prepareSigningEntries` to generate `message`
   txSkeleton = common.prepareSigningEntries(txSkeleton);
 
-  console.log(JSON.stringify(txSkeleton.signingEntries));
+  const signingEntriesArray = txSkeleton.signingEntries.toArray();
+
+  console.log("The generated message is "+ signingEntriesArray[0].message);
 }
 
 main();

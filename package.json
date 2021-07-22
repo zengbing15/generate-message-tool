@@ -21,11 +21,9 @@
     "@ckb-lumos/helpers": "^0.16.0",
     "@ckb-lumos/indexer": "^0.16.0",
     "@ckb-lumos/rpc": "^0.16.0",
+    "array-buffer-to-hex": "^1.0.0",
     "ckb-js-toolkit": "^0.10.2",
     "immutable": "^4.0.0-rc.12",
     "to-arraybuffer": "^1.0.1"
-  },
-  "devDependencies": {
-    "typescript": "^4.3.4"
   }
 }
