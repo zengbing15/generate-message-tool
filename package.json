@@ -1,7 +1,7 @@
 {
   "name": "generate-message-tool",
-  "version": "0.1.0",
-  "description": "A tool for generating message",
+  "version": "0.0.1",
+  "description": "Generate-message-tool is used for check signing message.",
   "main": "bin/index.js",
   "bin": {
     "generate-message": "./bin/index.js"
@@ -11,19 +11,18 @@
     "url": "git+https://github.com/zengbing15/generate-message-tool.git"
   },
   "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node bin/index.js"
   },
-  "author": "ZengBing",
+  "author": "zengbing",
   "license": "MIT",
   "dependencies": {
+    "@ckb-lumos/rpc": "^0.16.0",
     "@ckb-lumos/common-scripts": "^0.16.0",
     "@ckb-lumos/config-manager": "^0.16.0",
-    "@ckb-lumos/helpers": "^0.16.0",
     "@ckb-lumos/indexer": "^0.16.0",
-    "@ckb-lumos/rpc": "^0.16.0",
-    "array-buffer-to-hex": "^1.0.0",
+    "@ckb-lumos/helpers": "^0.16.0",
     "ckb-js-toolkit": "^0.10.2",
-    "immutable": "^4.0.0-rc.12",
-    "to-arraybuffer": "^1.0.1"
+    "immutable": "^4.0.0-rc.12"
   }
 }
