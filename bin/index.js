@@ -1,55 +1,36 @@
-#!/usr/bin/env node
-
-'use strict';
-const toolkit = require("ckb-js-toolkit");
+const { RPC } = require("@ckb-lumos/rpc");
 const { common } = require('@ckb-lumos/common-scripts');
 const { Indexer } = require("@ckb-lumos/indexer");
-const {
-  TransactionSkeleton,
-  objectToTransactionSkeleton,
-} = require("@ckb-lumos/helpers");
-
-// use `config-manager` to get node info
-const { initializeConfig, getConfig } = require("@ckb-lumos/config-manager");
-
+const { initializeConfig, 
+    getConfig 
+} = require("@ckb-lumos/config-manager");
+const {objectToTransactionSkeleton,} = require("@ckb-lumos/helpers");
 const { List } = require("immutable");
+const { Reader } = require("ckb-js-toolkit");
 const fs = require('fs');
 const UnsignedTransaction = require ("../schema/UnsignedTransaction.umd.js");
-const arrayBufferToHex = require('array-buffer-to-hex');
 
-//TODO：for now we directly set up as testnet, will deal with this later. 
-process.env.LUMOS_CONFIG_NAME = "AGGRON4";
+
+process.env.LUMOS_CONFIG_FILE = process.env.LUMOS_CONFIG_FILE || './config.json'
 initializeConfig();
-
 const CKB_CONFIG = getConfig();
 
-// Get the node info and connect to the node.
-const CKB_RPC_URI = process.env.CKB_RPC_URI || "http://127.0.0.1:8114";
+const CKB_RPC_URI = process.env.CKB_RPC_URI || "http://localhost:8114";
 const CKB_INDEXER_DATA = process.env.CKB_INDEXER_DATA || "./indexer-data";
 const indexer = new Indexer(CKB_RPC_URI, CKB_INDEXER_DATA);
 indexer.startForever();
 
-// generate wholetx
-
 /* Read UnsignedTx.json file */
 
 let rawdata = fs.readFileSync('UnsignedTx.json');
-//console.log (typeof rawdata);
-
 let unsignedtx = rawdata.toString();
-//console.log(unsignedtx)
-
-
 const wholetx = new Object();
-const UnsignedTx = new UnsignedTransaction.UnsignedTransaction(new toolkit.Reader(unsignedtx));
-//console.log(UnsignedTx);
+const UnsignedTx = new UnsignedTransaction.UnsignedTransaction(new Reader(unsignedtx));
 
 const tx = UnsignedTx.getTx();
 
 
 wholetx.version = "0x"+tx.getRaw().getVersion().toBigEndianUint32().toString(16);
-console.log(tx.getRaw().getVersion().raw())
-console.log(typeof tx.getRaw().getVersion().raw())
 
 const cellDeps_arraybuffer = new Array();
 for ( var i=0; i < tx.getRaw().getCellDeps().length(); i++){
@@ -61,9 +42,8 @@ for ( var i=0; i < tx.getRaw().getCellDeps().length(); i++){
     "dep_type":tx.getRaw().getCellDeps().indexAt(i).getDepType() 
    });
   }
-//console.log(cellDeps_arraybuffer);
 
-// "dep_type" = uint8(1) means that "dep_type" is "dep_group"
+  // "dep_type" = uint8(1) means that "dep_type" is "dep_group"
 wholetx.cell_deps = new Array();
 for ( var i=0; i < tx.getRaw().getCellDeps().length(); i++){
   wholetx.cell_deps.push({
@@ -74,20 +54,13 @@ for ( var i=0; i < tx.getRaw().getCellDeps().length(); i++){
     "dep_type":"dep_group"
    });
   }
-//console.log(wholetx.cell_deps);
 
-
-
-const headerDeps_arraybuffer = new Array();
 for ( var i=0; i < tx.getRaw().getHeaderDeps().length(); i++){
   outputsData_arraybuffer.push(tx.getRaw().getHeaderDeps().indexAt(i).raw());
    }
-// Becuase headerDeps_arraybuffer = []
-//console.log(headerDeps_arraybuffer);
+// Because headerDeps_arraybuffer = []
 wholetx.header_deps = [];
 
-
-//console.log(tx.getRaw().getInputs());
 const inputs_arraybuffer = new Array();
 for ( var i=0; i < tx.getRaw().getInputs().length(); i++){
   inputs_arraybuffer.push({
@@ -98,8 +71,8 @@ for ( var i=0; i < tx.getRaw().getInputs().length(); i++){
     },  
    });
   }
-//console.log(inputs_arraybuffer);
-wholetx.inputs = new Array();
+
+  wholetx.inputs = new Array();
 
 for ( var i=0; i < tx.getRaw().getInputs().length(); i++){
   wholetx.inputs.push({
@@ -111,11 +84,8 @@ for ( var i=0; i < tx.getRaw().getInputs().length(); i++){
     
    });
   }
-//console.log(wholetx.inputs);
 
-
-//console.log(tx.getRaw().getOutputs());
-const outputs_arraybuffer = new Array();
+  const outputs_arraybuffer = new Array();
 for ( var i=0; i < tx.getRaw().getOutputs().length(); i++){
   outputs_arraybuffer.push({
     "capacity":tx.getRaw().getOutputs().indexAt(i).getCapacity().toLittleEndianBigUint64(),
@@ -127,9 +97,8 @@ for ( var i=0; i < tx.getRaw().getOutputs().length(); i++){
     
    });
   }
-console.log(outputs_arraybuffer);
 
-wholetx.outputs = new Array();
+  wholetx.outputs = new Array();
 for ( var i=0; i < tx.getRaw().getOutputs().length(); i++){
   wholetx.outputs.push({
     "capacity":"0x"+ outputs_arraybuffer[i].capacity.toString(16),
@@ -140,10 +109,8 @@ for ( var i=0; i < tx.getRaw().getOutputs().length(); i++){
     },
    });
   }
-console.log(wholetx.outputs);
 
-
-const outputsData_arraybuffer = new Array();
+  const outputsData_arraybuffer = new Array();
 for ( var i=0; i < tx.getRaw().getOutputsData().length(); i++){
   outputsData_arraybuffer.push(tx.getRaw().getOutputsData().indexAt(i).raw());
    }
@@ -165,18 +132,19 @@ wholetx.witnesses.push("0x"+Buffer.from(witness_arraybuffer[i]).toString("hex"))
 
 console.log(JSON.stringify(wholetx,null,2));
 
-
 // Get the input cells info from the wholetx
-const INPUT_TX_HASH = wholetx.inputs[0].previous_output.tx_hash;
-//console.log(INPUT_TX_HASH);
 
 async function main() {
-  const rpc = new toolkit.RPC("http://127.0.0.1:8114");
-  const transaction = (await rpc.get_transaction(INPUT_TX_HASH)).transaction;
-  const txstatus = (await rpc.get_transaction(INPUT_TX_HASH)).tx_status;
-  const blockheader = (await rpc.get_block(txstatus.block_hash)).header;
+    
+    const rpc = new RPC("http://localhost:8114");
+    const INPUT_TX_HASH = wholetx.inputs[0].previous_output.tx_hash;
 
-// TODO: for now witness = {lock is 0, input_type is null, output_type is null},will deal with that input_type/output_type isn't null later. 
+    const transaction = (await rpc.get_transaction(INPUT_TX_HASH)).transaction;
+
+    const txstatus = (await rpc.get_transaction(INPUT_TX_HASH)).tx_status;
+    const blockheader = (await rpc.get_block(txstatus.block_hash)).header;
+
+    // witness = {lock is 0, input_type is null, output_type is null}
   const obj = new Object();
   obj.cellProvider = { indexer };
   obj.cellDeps = transaction.cell_deps;
@@ -196,13 +164,11 @@ async function main() {
   obj.signingEntries = [];
   obj.inputSinces = {};
 
-  
-  //Convert js object to TransactionSkeleton 
   let txSkeleton = objectToTransactionSkeleton(obj);
+  console.log(JSON.stringify(txSkeleton.toJS(),null,2));
 
-
-  // Use `common.prepareSigningEntries` to generate `message`
   txSkeleton = common.prepareSigningEntries(txSkeleton);
+  //console.log(JSON.stringify(txSkeleton.toJS(),null,2));
 
   const signingEntriesArray = txSkeleton.signingEntries.toArray();
 
